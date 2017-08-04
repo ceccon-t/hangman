@@ -3,7 +3,9 @@
 #include<stdlib.h>
 
 #define MAX_STRING 20
+#define MAX_HINT 75
 #define TOTAL_TRIES 5
+#define QUIT_SIGNAL '0'
 
 /*
 TODO: implement verification of winning the game
@@ -15,60 +17,63 @@ V
 TODO: implement a manual quit mechanism
 V
 
+TODO: force only one character choice each time
+
 TODO: Word structure
+V
 
 TODO: file storage / bin data
 
 TODO: random access to bin data
 */
 
-void display_match(char *string, int *mask);
+typedef struct word {
+	char string[MAX_STRING];
+	char hint1[MAX_HINT];
+	char hint2[MAX_HINT];
+	char hint3[MAX_HINT];
+} WORD;
+
+
+WORD choose_word();
+void display_match(WORD chosen_word, int *mask, int tries_left);
 void reset_mask(int *mask);
-int end_of_string(char *string);
 int check_win(int *mask, int i_last_char);
+int end_of_string(char *string); // TODO: remove eventually
 
 int main () {
-    char string[MAX_STRING] = "banana";
+    //char string[MAX_STRING] = "banana";
     int mask[MAX_STRING] = {0};
     char guess;
     int i, i_last_char, tries_left, won = 0, play = 1;
+    WORD chosen_word;
     
     //printf("%d\n", end_of_string(string));
     //exit(1);
+    
+    chosen_word = choose_word();
     
     while (play) {
     	won = 0;
     	tries_left = TOTAL_TRIES;
     	reset_mask(mask);
-    	i_last_char = strlen(string) - 1;
+    	i_last_char = strlen(chosen_word.string) - 1;
     	
     	while(tries_left > 0 && !won) {
-    		/*
-    		system("clear"); // TODO: find better solution than calling the system
-    		
-    		printf("\n---------\n");
-			for (i=0; i<strlen(string); i++) {
-				if (mask[i]) {
-					printf("%c", string[i]);
-				} else {
-				    printf("_");
-				}
-			}
-			*/
 			
-			display_match(string, mask);
+			display_match(chosen_word, mask, tries_left);
 		
 			printf("\n");
 			printf("You have %d guesses left.\n", tries_left);
-			printf("Make a guess (enter 0 to quit): ");
+			printf("Make a guess (enter %c to quit): ", QUIT_SIGNAL);
 			scanf(" %c", &guess);
 			
-			if (guess == '0') {
+			if (guess == QUIT_SIGNAL) {
 				tries_left = 0;
 			} else {
 		
-				for (i=0; i<strlen(string); i++) {
-					if (string[i] == guess) {
+				for (i=0; i<strlen(chosen_word.string); i++) {
+					if (chosen_word.string[i] == guess) {
 						mask[i] = 1;
 						won = check_win(mask, i_last_char);
 					}
@@ -79,7 +84,7 @@ int main () {
 			
     	}
     	
-    	display_match(string, mask);
+    	display_match(chosen_word, mask, tries_left);
     	
     	if (won) {
     		printf("\n\nYou've won!\n");
@@ -98,18 +103,34 @@ int main () {
     
 }
 
-void display_match(char *string, int *mask) { 
+
+WORD choose_word() {
+	WORD chosen;
+	
+	strcpy(chosen.string, "banana");
+	strcpy(chosen.hint1, "It's a fruit");
+	strcpy(chosen.hint2, "Associated with the tropics");
+	strcpy(chosen.hint3, "It's yellow");
+	
+	return chosen;
+}
+
+void display_match(WORD chosen_word, int *mask, int tries_left) { 
 	int i;
 	
 	system("clear"); // TODO: find better solution than calling the system
 	printf("\n---------\n");
-	for (i=0; i<strlen(string); i++) {
+	for (i=0; i<strlen(chosen_word.string); i++) {
 		if (mask[i]) {
-			printf("%c", string[i]);
+			printf("%c", chosen_word.string[i]);
 		} else {
 		    printf("_");
 		}
 	}
+	
+	printf("\nHint 1: %s\n", chosen_word.hint1);
+	printf("Hint 2: %s\n", (tries_left < 4) ? chosen_word.hint2 : "XXXXXXXX" );
+	printf("Hint 3: %s\n", (tries_left < 2) ? chosen_word.hint3 : "XXXXXXXX" );
 	
 }
 
