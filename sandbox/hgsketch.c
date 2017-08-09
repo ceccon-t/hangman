@@ -2,6 +2,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<time.h>
+#include<ctype.h>
 
 #define MAX_STRING 20
 #define MAX_HINT 75
@@ -28,10 +29,13 @@ V
 =======================
 // Validation
 TODO: force only one character choice each time
+EDIT: this seems to be nearly impossible to do with a standard terminal + stdin
 
 TODO: force only unused characters
+V
 
 TODO: display used characters
+V
 
 =======================
 
@@ -73,14 +77,16 @@ typedef struct word {
 
 WORD choose_word();
 void display_match(WORD chosen_word, int *mask, int tries_left);
+void display_chars_used(char *chars_already_used);
 void reset_mask(int *mask, int val);
 int check_win(int *mask, int i_last_char);
+char get_user_input(char *chars_already_used);
 int end_of_string(char *string); // TODO: remove eventually
 
 int main () {
     //char string[MAX_STRING] = "banana";
     int mask[MAX_STRING] = {0};
-    char guess;
+    char guess, chars_already_used[28];
     int i, i_last_char, tries_left, won = 0, play = 1, found;
     WORD chosen_word;
     
@@ -96,15 +102,26 @@ int main () {
     	reset_mask(mask, 0);
     	chosen_word = choose_word();
     	i_last_char = strlen(chosen_word.string) - 1;
+    	strcpy(chars_already_used, "");
     	
     	while(tries_left > 0 && !won) {
 			
 			display_match(chosen_word, mask, tries_left);
 		
+			
 			printf("\n");
 			printf("You have %d guesses left.\n", tries_left);
-			printf("Make a guess (enter %c to quit): ", QUIT_SIGNAL);
-			scanf(" %c", &guess);
+			printf("You have already guessed the following letters: ");
+			display_chars_used(chars_already_used);
+			printf("\nGuess ONE letter (enter %c to quit): ", QUIT_SIGNAL);
+			
+			//scanf(" %c", &guess);
+			
+			
+			guess = get_user_input(chars_already_used);
+			
+			//printf("===%c===", guess);
+			//exit(1);
 			
 			if (guess == QUIT_SIGNAL) {
 				tries_left = 0;
@@ -199,6 +216,20 @@ void display_match(WORD chosen_word, int *mask, int tries_left) {
 	
 }
 
+void display_chars_used(char *chars_already_used) {
+	int i, len;
+	
+	len = strlen(chars_already_used);
+	
+	for (i = 0; i < len; i++) {
+		printf("%c%s", chars_already_used[i],  (i == (len - 1 ))? "" : ", ");
+	}
+	
+	printf("\n");
+	
+}
+
+
 void reset_mask(int *mask, int val) {
 	int i;
 	
@@ -217,6 +248,47 @@ int check_win(int *mask, int i_last_char) {
 	
 	return 1;
 }
+
+char get_user_input(char *chars_already_used) {
+	char valid_inputs[] = "abcdefghijklmnopqrstuvwxyz0", raw_in[3];
+	char cleansed_input;
+	int len;
+	
+	fflush(stdin); // TODO: ?
+	
+	//fgets(raw_in, 2, stdin);
+	//cleansed_input = tolower(raw_in[0]);
+	scanf(" %c", &cleansed_input);
+	cleansed_input = tolower(cleansed_input);
+	
+//	while ((raw_in[1] != '\0') || (strchr(valid_inputs, cleansed_input) == NULL) || (strchr(chars_already_used, cleansed_input) != NULL)) {
+
+	while ((strchr(valid_inputs, cleansed_input) == NULL) || (strchr(chars_already_used, cleansed_input) != NULL)) {
+	
+	//while (raw_in[1] != '\0') {
+		printf("\nPlease enter only an UNUSED LETTER. Try again: ");
+		/*
+		fgets(raw_in, 2, stdin);
+		cleansed_input = tolower(raw_in[0]);
+		*/
+		scanf(" %c", &cleansed_input);
+		cleansed_input = tolower(cleansed_input);
+		
+		
+	}
+	
+	
+	len = strlen(chars_already_used);
+	chars_already_used[len] = cleansed_input;
+	chars_already_used[len+1] = '\0';
+	
+	//strcat(chars_already_used, cleansed_input); 
+	
+	return cleansed_input;
+	
+
+}
+
 
 
 // Pure debug
