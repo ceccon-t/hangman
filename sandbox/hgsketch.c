@@ -29,7 +29,7 @@ V
 =======================
 // Validation
 TODO: force only one character choice each time
-EDIT: this seems to be nearly impossible to do with a standard terminal + stdin
+EDIT: this seems to be nearly impossible to do nicely with a standard terminal + stdin
 
 TODO: force only unused characters
 V
@@ -62,8 +62,12 @@ TODO: check clear screen
 V
 
 TODO: define the visual presentation of the game
+V
 
 TODO: implement the 'drawings'
+V
+
+TODO: refactor the code to clean the main function
 =======================
 */
 
@@ -76,6 +80,7 @@ typedef struct word {
 
 
 WORD choose_word();
+void draw_gallows(int tries_left);
 void display_match(WORD chosen_word, int *mask, int tries_left);
 void display_chars_used(char *chars_already_used);
 void reset_mask(int *mask, int val);
@@ -110,7 +115,8 @@ int main () {
 		
 			
 			printf("\n");
-			printf("You have %d guesses left.\n", tries_left);
+			//printf("You have %d guesses left.\n", tries_left);
+			printf("You have %d guess%s left.\n", tries_left, (tries_left == 1) ? "" : "es");
 			printf("You have already guessed the following letters: ");
 			display_chars_used(chars_already_used);
 			printf("\nGuess ONE letter (enter %c to quit): ", QUIT_SIGNAL);
@@ -195,22 +201,82 @@ WORD choose_word() {
 	return chosen;
 }
 
+void print_gallow_with_offset(char *part) {
+	printf("\t\t%s\n", part);
+}
+
+void draw_gallows(int tries_left) {
+	
+	print_gallow_with_offset("_________");
+	print_gallow_with_offset("|       |");
+	//print_gallow_with_offset((tries_left < 5) ? "|       O" : "|");
+	if (tries_left < 5) {
+		if (tries_left == 0) {
+			print_gallow_with_offset("|       0");
+		} else {
+			print_gallow_with_offset("|       O");
+		}
+	} else {
+		print_gallow_with_offset("|");
+	}
+	//print_gallow_with_offset((tries_left < 4) ? "|      -|-" : "|");
+	if (tries_left < 4) {
+		if (tries_left < 2) {
+			print_gallow_with_offset("|      -|-");
+		} else {
+			print_gallow_with_offset("|       |");
+		}
+	} else {
+		print_gallow_with_offset("|");
+	}
+	print_gallow_with_offset((tries_left < 4) ? "|       |" : "|");
+	print_gallow_with_offset((tries_left < 3) ? "|      / \\" : "|");
+	print_gallow_with_offset("|");
+	print_gallow_with_offset("|");
+	print_gallow_with_offset("-----------------");
+	
+	printf("\n");
+	
+	
+	/*
+_________
+|       |
+|       O
+|      -|-
+|       |
+|      / \
+|
+|
+-----------------
+
+	*/
+}
+
+
 void display_match(WORD chosen_word, int *mask, int tries_left) { 
 	int i;
 	
 	//system("clear||cls"); 
 	// cls: Windows command to clear prompt; printf "\033c": same for bash
 	system("cls||printf \"\\033c\""); // TODO: find better solution than calling the system
-	printf("\n---------\n");
+	
+	// Title
+	printf("================================================================================\n");
+	printf("=================================== HANGMAN ====================================\n");
+	printf("================================================================================\n");
+	
+	draw_gallows(tries_left);
+	
+	printf("\t\t\t\t");
 	for (i=0; i<strlen(chosen_word.string); i++) {
 		if (mask[i]) {
-			printf("%c", chosen_word.string[i]);
+			printf("%c ", chosen_word.string[i]);
 		} else {
-		    printf("_");
+		    printf("_ ");
 		}
 	}
 	
-	printf("\nHint 1: %s\n", chosen_word.hint1);
+	printf("\n\nHint 1: %s\n", chosen_word.hint1);
 	printf("Hint 2: %s\n", (tries_left < 4) ? chosen_word.hint2 : "XXXXXXXX" );
 	printf("Hint 3: %s\n", (tries_left < 2) ? chosen_word.hint3 : "XXXXXXXX" );
 	
