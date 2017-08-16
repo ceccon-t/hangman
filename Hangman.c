@@ -25,60 +25,7 @@
 
 /*
 =======================
-// Gameplay
-TODO: implement verification of winning the game
-V
-
-TODO: implement a manual quit mechanism
-V
-
-TODO: decrement tries_left only when no matches were found for the guess
-V
-=======================
-
-=======================
-// Validation
-TODO: force only one character choice each time
-EDIT: this seems to be nearly impossible to do nicely with a standard terminal + stdin
-
-TODO: force only unused characters
-V
-
-TODO: display used characters
-V
-
-=======================
-
-=======================
-// Data structure
-TODO: Word structure
-V
-
-TODO: file storage / bin data
-V
-
-TODO: random access to bin data
-V
-- TODO: find number of entries on the file (to determine a random position)
-V
-=======================
-
-=======================
-// Interface
-TODO: display tries_left
-V
-
-TODO: check clear screen
-V
-
-TODO: define the visual presentation of the game
-V
-
-TODO: implement the 'drawings'
-V
-
-TODO: refactor the code to clean the main function
-V
+Placeholder for future TODOs
 =======================
 */
 
@@ -98,17 +45,22 @@ void display_chars_used(char *chars_already_used);
 void reset_mask(int *mask, int val);
 int check_win(int *mask, int i_last_char);
 char get_user_input(char *chars_already_used);
-
+int check_datafile();
+int create_default_datafile(char * filename);
 
 int main () {
 	
 	// Variables
     int mask[MAX_STRING] = {COVERED};
     char guess, chars_already_used[MAX_CHARS_USED];
-    int i, i_last_char, tries_left, won, play = 1, found;
+    int i, i_last_char, tries_left, won, play, found;
     WORD chosen_word;
     
     srand(time(0));
+    
+    clear_screen();
+    
+    play = check_datafile();
     
     // Game loop
     while (play) {
@@ -165,7 +117,6 @@ int main () {
     return 0;
     
 }
-
 
 WORD choose_word() {
 	WORD chosen;
@@ -268,7 +219,7 @@ BOTTOM
 void clear_screen() {
 	
 	// cls: Windows command to clear prompt; printf "\033c": same for bash
-	system("printf \"\\033c\"||cls"); // TODO: find better solution than calling the system
+	system("printf \"\\033c\"||cls"); 
 
 }
 
@@ -374,4 +325,84 @@ char get_user_input(char *chars_already_used) {
 
 }
 
+int create_default_datafile(char * filename) {
+	FILE * datafile;
+	int i;
+	WORD words[] = {
+					{ 
+					  "banana",
+					  "It's a fruit",
+					  "Associated with the tropics",
+					  "It's yellow"
+					},
+					{ 
+					  "hangman",
+					  "A game",
+					  "Usually played with pen and paper",
+					  "Focused on words"
+					},
+					{ 
+					  "argentina",
+					  "A country",
+					  "On the southern hemisphere",
+					  "Its official language is Spanish"
+					},
+					{ 
+					  "jazz",
+					  "A music genre",
+					  "Became very popular after the 1920s",
+					  "American"
+					},
+					{ 
+					  "dumbledore",
+					  "A fictional character",
+					  "First appeared in literature, but later also in film and games",
+					  "From the Harry Potter universe"
+					}
+				 };
+	
+	if ((datafile = fopen(filename, "wb")) != NULL) {
+		
+		for (i = 0; i < NUM_WORDS_DEFAULT_FILE; i++) {
+			fwrite(&words[i], sizeof(WORD), 1, datafile);
+		}
+		
+		fclose(datafile);
+		
+		return 1;
+	
+	} else {
+		return 0;
+	}
+	
+}
+
+int check_datafile() {
+	FILE * datafile;
+	int choice;
+	
+	datafile = fopen(DATAFILENAME, "rb");
+	
+	if (datafile != NULL) {
+		return 1;
+	} else {
+		printf("Datafile not found. Please download the file -words.dat- from the repository on github and place it on the same folder of the game to play with all possible words.\n");
+	    printf("\n\nEnter 1 to create a new default database (only 5 words) and continue playing.");
+	    printf("\nEnter 0 to exit.");
+		do {
+		    printf("\nYour choice (0/1): ");
+		    scanf(" %d", &choice);
+		} while(choice != 0 && choice != 1);
+		
+		if (choice == 1) {
+			if (create_default_datafile(DATAFILENAME) != 1) {
+				printf("\nERROR WHILE TRYING TO INITIALIZE DATAFILE, EXITING NOW.\n\n\n");
+				exit(1);
+			} 
+		}
+		
+		return choice;
+	}
+	
+}
 
