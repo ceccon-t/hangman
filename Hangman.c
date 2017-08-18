@@ -287,7 +287,7 @@ void reset_mask(int *mask, int val) {
 int check_win(int *mask, int i_last_char) {
 	int i;
 	
-	for (i = 0; i < i_last_char; i++) {
+	for (i = 0; i <= i_last_char; i++) {
 		if(mask[i] == COVERED) return 0; // still has covered chars
 	}
 	
